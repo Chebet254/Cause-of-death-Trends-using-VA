@@ -12,8 +12,8 @@ CoD3 <- read_dta("CoD3.dta")%>% as_factor()
 table(verbal_autopsies$ICD10causeofdeaths, verbal_autopsies$sex)
 
 
-counts <- (verbal_autopsies 
-           %>% group_by(ICD10causeofdeaths, sex) 
+counts <- (df2 
+           %>% group_by(Cleaned_COD, sex) 
            %>% count() 
            %>% arrange(desc(n))
            %>% head(20)
@@ -21,7 +21,7 @@ counts <- (verbal_autopsies
 
 #bar plot to show rate of htn
 plot<- counts%>% 
-  ggplot(aes(x = ICD10causeofdeaths, y = n, fill = sex))+
+  ggplot(aes(x = Cleaned_COD, y = n, fill = sex))+
   geom_bar(stat = "identity", 
            position = "stack",
            col = "lightcoral")+
@@ -30,14 +30,16 @@ plot<- counts%>%
   theme(legend.position = "right")+
   geom_text(mapping = aes(label = ''), 
             hjust = .2, nudge_x = -.1, colour = "black", vjust = -.2)+
-  labs(title = "TOP 10 CAUSES OF DEATH",
-       x = "ICD 10 CAUSES OF DEATH")
+  labs(title = "TOP 10 CAUSES OF DEATH- IGANGA MAYUGE",
+       x = "ICD 10 CAUSES OF DEATH")+
+  guides(fill=guide_legend(ncol=3),
+         guide = guide_legend(order = 1))
 
 plot
 
 #icd 10 & years
 #top_n <- 1:10
-counts3 <- (verbal_autopsies 
+counts3 <- (df 
   %>% select(ICD10causeofdeaths, dodyear)
   %>% group_by(ICD10causeofdeaths, dodyear )
   %>% count()
@@ -63,55 +65,33 @@ ggplot(data_new, aes(x = dodyear, y = n,
   scale_y_continuous(breaks = seq(0, 200, by = 20))+
   theme(legend.position = 'bottom')
 
-#top 10 per year
-# top_n_year <- 10
-# data_subset = (verbal_autopsies 
-#                %>% select("dodyear",  "ICD10causeofdeaths") 
-#                %>% group_by(dodyear, ICD10causeofdeaths)
-#                %>%count()
-#                %>% ungroup()
-#                %>% group_by(dodyear)
-#                %>%arrange(desc(n),.by_group = TRUE)
-#                %>% mutate(index = 1:n())
-#                %>% filter(index <= top_n_year)
-#                %>% ungroup()
-# 
-# )
-# 
-# # Stacked
-# ggplot(data_subset, aes(fill=fct_reorder(ICD10causeofdeaths, -n), y=n, x=as.factor(dodyear))) + 
-#   geom_bar(aes(group = dodyear), position="dodge2", stat="identity")+
-#   #scale_fill_viridis(discrete = T, option = 'D')+
-#   scale_color_brewer(palette = "Pastel1")+
-#   #scale_colour_paletteer_d(ggsci, nrc_npg)
-#   theme_bw()+
-#   theme(legend.position = 'bottom')
-# 
 
 #MIKE
 #top ten per year
 #top 10 per year
 top_n_year <- 10
-data_subset = (age_grp
-               %>% select("dodyear",  "ICD10causeofdeaths")
-               %>% group_by(dodyear, ICD10causeofdeaths)
+data_subset = (df2
+               %>% select("dodyear",  "Cleaned_COD")
+               %>% group_by(dodyear, Cleaned_COD)
                %>%count()
                %>% ungroup()
                %>% group_by(dodyear)
+               %>% mutate(percentage = n / sum(n) * 100)
                %>%arrange(desc(n),.by_group = TRUE)
                %>% mutate(index = 1:n())
                %>% filter(index <= top_n_year)
                %>% ungroup()
 )
+colnames(data_subset) <- c('yearofdeath', 'Cleaned_COD', 'n', 'percentage', 'index')
 
-data_subset <- data_subset %>% filter(dodyear >2011)
-t1 = c('2012','2013','2014','2015')
-t2 = c('2016','2017','2018','2019' )
-t3 = c('2020','2021', '2022')
+data_subset <- data_subset %>% filter(yearofdeath >2010)
+t1 = c('2011','2012','2013','2014')
+t2 = c('2015','2016','2017','2018' )
+t3 = c('2019','2020','2021', '2022')
 
 
 data_subset <- (data_subset
-  %>% mutate(.new_group = as.factor(dodyear)
+  %>% mutate(.new_group = as.factor(yearofdeath)
     , .new_group = fct_collapse(.new_group
       , `2012 - 2015` = t1
       , `2016 - 2019` = t2
@@ -121,19 +101,19 @@ data_subset <- (data_subset
 )
 
 
-#palettes <- ggthemes_data[["tableau"]][["color-palettes"]][["regular"]][["Tableau 20"]]$value
-
 ggplot(data = data_subset, 
        #%>% filter(dodyear %in% t1), 
-       aes(x=as.factor(dodyear), y=n, fill = fct_reorder(ICD10causeofdeaths, -n)))+
-  geom_bar(aes(group = dodyear),stat="identity", position = "dodge2")+
+       aes(x=as.factor(yearofdeath), y=n, fill = fct_reorder(Cleaned_COD, -n)))+
+  geom_bar(aes(group = yearofdeath),stat="identity", position = "dodge2")+
  facet_wrap(~.new_group, scales = "free_x", ncol = 1)+
   theme_light()+
   theme(legend.position = "right")+
-  guides(fill=guide_legend(ncol=1)) + 
-  labs(fill = "Causes of Death")+
-  theme(axis.title.x=element_blank())+
-scale_fill_manual(values = my_colors)
+  guides(fill=guide_legend(ncol=1),
+         guide = guide_legend(order = 1)  ) + 
+  labs(x ='', y = '', fill = "Causes of Death")+
+  my_theme+
+scale_fill_manual(values = col3)+
+  ggtitle("ICD10 CAUSES OF DEATH OVER THE YEARS- IGANGA")
   
 #AGE 
 
@@ -155,18 +135,9 @@ ggplot(data = top10_data,
   theme(legend.position = "right")+
   guides(fill=guide_legend(ncol=1)) + 
   labs(fill = "Causes of Death")+
-  theme(axis.title.x=element_blank())+
+  my_theme+
   scale_fill_manual(values = my_colors)
 
-# ggplot(data = data_subset 
-#        %>% filter(dodyear %in% t2), 
-#        aes(x=dodyear, y=n, fill = ICD10causeofdeaths))+
-#   geom_bar(stat="identity", position = "dodge2")+
-#   # facet_wrap(vars(ICD10causeofdeaths), ncol = 1)+
-#   theme_light()+
-#   theme(legend.position = "right"
-#   )
-#   
 
 #AGE GROUPS 
 #NEONATES
@@ -197,98 +168,61 @@ ggplot(neon, aes(x = dodyear, y = n,
   scale_x_continuous(breaks = seq(2012, 2022, by = 2))+
   scale_fill_manual(values = palettes)
 
-#STILL BIRTHS
-SB <- age_grp %>% filter(age_range == 'Stillbirth')
-SB <- (SB  %>% select(ICD10causeofdeaths, dodyear, age_range)
-             %>% group_by(ICD10causeofdeaths, dodyear, age_range)
-             %>% count()
-             %>% ungroup()
-             %>% group_by(ICD10causeofdeaths)
-             %>% mutate(y = sum(n))
-             %>% arrange(desc(y))
-             %>% ungroup()
-             %>% group_by(y)
-             %>% mutate(index = 1:n()) 
-             #%>% head(10)
-             
-)
+#MERGED
+top10_data <- top10_data%>% mutate(flag = 'Iganga')
+nuhdss_top10_data <- nuhdss_top10_data%>% mutate(flag = 'Nuhdss')
+meiru_top10_data <- meiru_top10_data%>% mutate(flag = 'Karonga')
+kisesa_top10_data <- kisesa_top10_data%>% mutate(flag = 'Magu')
 
-SB <- SB[1:56, ]
+AgecatMerged <- rbind(top10_data, nuhdss_top10_data, meiru_top10_data, kisesa_top10_data)
 
-ggplot(SB, aes(x = dodyear, y = n,
-                 group = (ICD10causeofdeaths),
-                 colour = ICD10causeofdeaths)) +
-  geom_line(linewidth = 2, alpha = 2, linetype = 1)+
-  theme_light()+
-  ggtitle("ICD10 STILL BIRTH CAUSES OF DEATH OVER THE YEARS (2007-2022)")+
-  scale_x_continuous(breaks = seq(2005, 2022, by = 2))+
-  scale_y_continuous(breaks = seq(0, 200, by = 20))
-
-#ADULTS 
-Adults <- age_grp %>% filter(age_range == 'Adult')
-Adults <- (Adults %>% select(ICD10causeofdeaths, dodyear, age_range)
-       %>% group_by(ICD10causeofdeaths, dodyear, age_range)
-       %>% count()
-       %>% ungroup()
-       %>% group_by(ICD10causeofdeaths)
-       %>% mutate(y = sum(n))
-       %>% arrange(desc(y))
-       %>% ungroup()
-       %>% group_by(y)
-       %>% mutate(index = 1:n()) 
-       #%>% head(10)
-       
-)
-Adults<- Adults[1:128, ]
-
-ggplot(Adults, aes(x = dodyear, y = n,
-               group = (ICD10causeofdeaths),
-               colour = ICD10causeofdeaths)) +
-  geom_line(linewidth = 2, alpha = 2, linetype = 1)+
-  theme_light()+
-  ggtitle("ICD10 ADULTS CAUSES OF DEATH OVER THE YEARS (2007-2022)")+
-  scale_x_continuous(breaks = seq(2005, 2022, by = 2))+
-  scale_y_continuous(breaks = seq(0, 200, by = 20))
-
-#CHILD
-child <- age_grp %>% filter(age_range == 'Child', dodyear >2012)
-child <- (child %>% select(ICD10causeofdeaths, dodyear, age_range)
-           %>% group_by(ICD10causeofdeaths, dodyear, age_range)
-           %>% count()
-           %>% ungroup()
-           %>% group_by(ICD10causeofdeaths)
-           %>% mutate(y = sum(n))
-           %>% arrange(desc(y))
-           %>% ungroup()
-           %>% group_by(y)
-           %>% mutate(index = 1:n()) 
-           #%>% head(10)
-           
-)
-child<- child[1:63, ]
-
-ggplot(child, aes(x = dodyear, y = n,
-                   group = (ICD10causeofdeaths),
-                   colour = ICD10causeofdeaths)) +
-  geom_line(linewidth = 2, alpha = 2, linetype = 1)+
-  theme_light()+
-  ggtitle("ICD10 CHILD CAUSES OF DEATH OVER THE YEARS (2007-2022)")+
-  scale_x_continuous(breaks = seq(2005, 2022, by = 2))+
-  scale_y_continuous(breaks = seq(0, 200, by = 20))
+ggplot(AgecatMerged, aes(x = as.factor(age_cat), y = percentage,
+                         fill = fct_reorder(Cleaned_COD, -percentage))) +
+  geom_bar( aes(group = age_cat), stat = "identity") +
+  facet_grid(rows = vars(flag),cols = NULL, scales = "free") +
+  theme(strip.text = element_text(size = 20, face = "bold")) +
+  labs(x = "", y = "", fill = 'Cause of Death') +
+  ggtitle("Overall Top 5 Causes of Death by Age Group across the four sites")+
+  guides(fill=guide_legend(ncol=1),
+                       guide = guide_legend(order = 1))+
+  theme_bw()+
+theme(axis.title.x=element_blank(),
+      axis.text.x=element_blank(),
+      legend.text = element_text(size =30),
+      legend.title = element_text(size = 32, face = "bold"),
+      legend.key.size = unit(1, "cm"),
+      legend.position = 'right',
+      axis.text = element_text(size = 20, face = 'bold'),
+      axis.title  = element_text(size=18,color='white',face='bold'),
+      title = element_text(size = 40, face = 'bold'))+
+  scale_fill_manual(values = col3)+
+  theme(legend.position = "right")
 
 
+#COD OVER TIME MERGED
+data_subset <- data_subset %>% mutate(flag = 'Iganga')
+nuhdss_data_subset <-nuhdss_data_subset %>% mutate(flag = 'Nuhdss')
+meiru_data_subset <-meiru_data_subset %>% mutate(flag = 'Karonga')
+kisesa_data_subset <-kisesa_data_subset %>% mutate(flag = 'Magu')
+MergedSubset <-  rbind(data_subset, nuhdss_data_subset, meiru_data_subset, kisesa_data_subset)
 
-
-# theme(axis.title.x=element_blank()
-#       , axis.text.x=element_blank()
-#       , axis.ticks.x=element_blank()
-#       , legend.position = "right"
-# )
-
-# data_new <- counts3[order(counts3$y, decreasing = TRUE), ]
-# data_new <- Reduce(rbind,                                 # Top N highest values by group
-#                     by(data_new,
-#                        data_new["y"],
-#                        head,
-#                        n = 5))
-
+ggplot(MergedSubset, aes(x = as.factor(yearofdeath), y = percentage,
+                         fill = fct_reorder(Cleaned_COD, -percentage))) +
+  geom_bar( aes(group = yearofdeath), stat = "identity", position = "dodge2") +
+  facet_grid(rows = vars(flag),cols = NULL, scales = "free") +
+  theme(strip.text = element_text(size = 35, face = "bold")) +
+  labs(x = "", y = "", fill = 'Cause of Death') +
+  ggtitle("CAUSES OF DEATH OVER THE YEARS")+
+  guides(fill=guide_legend(ncol=1),
+         guide = guide_legend(order = 1))+
+  #theme_bw()+
+theme(axis.title.x=element_blank(),
+      legend.text = element_text(size =30),
+      legend.title = element_text(size = 32, face = "bold"),
+      legend.key.size = unit(1, "cm"),
+      legend.position = 'right',
+      axis.text = element_text(size = 20, face = 'bold'),
+      axis.title  = element_text(size=18,color='white',face='bold'),
+      title = element_text(size = 40, face = 'bold'))+
+  scale_fill_manual(values = col3)+
+theme(legend.position = "right")
