@@ -134,7 +134,7 @@ ggplot(TBAIDS, aes(x="", y=icod_1, fill= percentage)) +
 
 
 
-#COD BY AGE CATEGORIES
+#COD BY AGE CATEGORIES TOP 5
 str(nuhdss_va)
 nuhdss_total_ages <- nuhdss_va %>% select(age_cat,Cleaned_COD )
 nuhdss_total_ages <- nuhdss_total_ages %>%

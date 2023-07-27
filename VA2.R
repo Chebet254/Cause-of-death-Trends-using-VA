@@ -70,6 +70,8 @@ BlankSettings <- theme(legend.position = "none",
                        axis.title.x = element_text(size=12,color='white',face='bold'),
                        panel.grid = element_blank(),panel.grid.major = element_blank(),panel.background = element_blank()
 )
+top10_data$age_cat <- factor(top10_data$age_cat, 
+                               levels=c("neonate", "infant", "1-4", "5-14", "15-49", "50-64", "65+"))
 
 ggplot(top10_data, aes(x =as.factor(age_cat), y = percentage, fill =fct_reorder(Cleaned_COD, -percentage))) +
   geom_bar(aes(group = age_cat),stat = "identity") +
@@ -77,7 +79,7 @@ ggplot(top10_data, aes(x =as.factor(age_cat), y = percentage, fill =fct_reorder(
   ggtitle("Overall Top 5 Causes of Death by Age Group- Iganga Mayuge HDSS")+
   scale_fill_manual(values = my_colors2)+
   guides(fill=guide_legend(ncol=1))+
- my_theme+
+  my_theme+
   labs(fill = "Causes of Death")
 #gen causes of death
 iganga <- df2 %>% select(dodyear, age_cat, ICD10codes, sex, Cleaned_COD)
